@@ -317,6 +317,10 @@
 }
 .mobile-overlay.active { display: block; }
 
+/* hogy a #anchor görgetés ne csússzon a sticky nav alá */
+section { scroll-margin-top: 80px; }
+
+
 
 
 </style>
@@ -786,77 +790,54 @@
 		</footer> 
 		<!-- Toggle Script --> 
 			<script>
-				document.addEventListener('DOMContentLoaded', () => {
-				  // --- Lenyitható dobozok (változatlan) ---
-				  document.querySelectorAll('.toggle-btn').forEach(btn => {
-					btn.addEventListener('click', () => {
-					  const parent = btn.closest('.detail-item');
-					  parent.classList.toggle('open');
-					  const label = btn.querySelector('.label');
-					  const arrow = btn.querySelector('.arrow');
-					  if (parent.classList.contains('open')) {
-						if (label) label.textContent = 'Bezárás';
-						if (arrow) arrow.textContent = '▲';
-					  } else {
-						if (label) label.textContent = 'Részletek';
-						if (arrow) arrow.textContent = '▼';
-					  }
-					});
-				  });
+				 // --- Hamburger + overlay ---
+  const hamburger = document.getElementById('hamburger');
+  const navLinks  = document.getElementById('nav-links');
+  const overlay   = document.getElementById('mobile-overlay');
 
-				  // --- Hamburger + overlay ---
-				  const hamburger = document.getElementById('hamburger');
-				  const navLinks  = document.getElementById('nav-links');
-				  const overlay   = document.getElementById('mobile-overlay');
+  if (!hamburger || !navLinks || !overlay) return;
 
-				  if (!hamburger || !navLinks || !overlay) return;
+  const openMenu = () => {
+    navLinks.classList.add('active');
+    hamburger.classList.add('active');
+    overlay.classList.add('active');
+  };
+  const closeMenu = () => {
+    navLinks.classList.remove('active');
+    hamburger.classList.remove('active');
+    overlay.classList.remove('active');
+  };
+  const isMenuOpen = () => navLinks.classList.contains('active');
 
-				  function openMenu() {
-					navLinks.classList.add('active');
-					hamburger.classList.add('active');
-					overlay.classList.add('active');
-				  }
-				  function closeMenu() {
-					navLinks.classList.remove('active');
-					hamburger.classList.remove('active');
-					overlay.classList.remove('active');
-				  }
-				  function isMenuOpen() { return navLinks.classList.contains('active'); }
+  hamburger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isMenuOpen() ? closeMenu() : openMenu();
+  });
 
-				  hamburger.addEventListener('click', (e) => {
-					e.stopPropagation();
-					isMenuOpen() ? closeMenu() : openMenu();
-				  });
+  // ⬇️ Linkre kattintás: HAGYJUK a natív anchor-görgetést, csak zárjuk a menüt
+  navLinks.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', () => {
+      closeMenu();
+      // nincs preventDefault -> a böngésző szépen odagördül
+    });
+  });
 
-				  // ⬇️ Linkre kattintás: sima görgetés + bezárás
-				  navLinks.querySelectorAll('a').forEach(link => {
-					link.addEventListener('click', (e) => {
-					  const href = link.getAttribute('href') || '';
-					  if (href.startsWith('#')) {
-						e.preventDefault();
-						const target = document.querySelector(href);
-						if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-					  }
-					  closeMenu();
-					});
-				  });
+  overlay.addEventListener('click', closeMenu);
 
-				  overlay.addEventListener('click', closeMenu);
+  document.addEventListener('click', (e) => {
+    if (!isMenuOpen()) return;
+    const clickedInside = navLinks.contains(e.target) || hamburger.contains(e.target);
+    if (!clickedInside) closeMenu();
+  });
 
-				  document.addEventListener('click', (e) => {
-					if (!isMenuOpen()) return;
-					const clickedInside = navLinks.contains(e.target) || hamburger.contains(e.target);
-					if (!clickedInside) closeMenu();
-				  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isMenuOpen()) closeMenu();
+  });
 
-				  document.addEventListener('keydown', (e) => {
-					if (e.key === 'Escape' && isMenuOpen()) closeMenu();
-				  });
-
-				  window.addEventListener('resize', closeMenu);
-				  window.addEventListener('orientationchange', closeMenu);
-				});
-			</script>
+  window.addEventListener('resize', closeMenu);
+  window.addEventListener('orientationchange', closeMenu);
+});
+</script>
 
 
 
